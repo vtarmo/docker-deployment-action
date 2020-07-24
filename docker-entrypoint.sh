@@ -74,19 +74,27 @@ printf '%s\n' "$INPUT_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa"
 chmod 600 "$HOME/.ssh/id_rsa"
 eval $(ssh-agent)
 ssh-add "$HOME/.ssh/id_rsa"
+
+echo "VTA create ssh config file"
 printf '%s\n    %s\n' 'Host $SSH_HOST' "StrictHostKeyChecking=no" >> "$HOME/.ssh/config"
 
 echo "Add known hosts"
 printf '%s %s\n' "$SSH_HOST" "$INPUT_SSH_PUBLIC_KEY" > /etc/ssh/ssh_known_hosts
+echo "Add known hosts to user ssh directory"
+printf '%s %s\n' "$SSH_HOST" "$INPUT_SSH_PUBLIC_KEY" > "$HOME/.ssh/known_hosts"
 
+echo "do that thing here"
 if ! [ -z "$INPUT_DOCKER_PRUNE" ] && [ $INPUT_DOCKER_PRUNE = 'true' ] ; then
   yes | docker --log-level debug --host "ssh://$INPUT_REMOTE_DOCKER_HOST" system prune -a 2>&1
 fi
 
+echo "create stacks directory and copy stackfile $FILE_NAME"
+echo "INPUT_COPY_STACK_FILE = $INPUT_COPY_STACK_FILE"
 if ! [ -z "$INPUT_COPY_STACK_FILE" ] && [ $INPUT_COPY_STACK_FILE = 'true' ] ; then
   execute_ssh "mkdir -p $INPUT_DEPLOY_PATH/stacks || true"
   FILE_NAME="docker-stack-$(date +%Y%m%d%s).yaml"
 
+  echo "copy command: scp -i "$HOME/.ssh/id_rsa -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $INPUT_STACK_FILE_NAME "$INPUT_REMOTE_DOCKER_HOST:$INPUT_DEPLOY_PATH/stacks/$FILE_NAME""
   scp -i "$HOME/.ssh/id_rsa" \
       -o UserKnownHostsFile=/dev/null \
       -o StrictHostKeyChecking=no \
