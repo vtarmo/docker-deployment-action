@@ -84,7 +84,10 @@ echo "Add known hosts to user ssh directory"
 printf '%s %s\n' "$SSH_HOST" "$INPUT_SSH_PUBLIC_KEY" > "$HOME/.ssh/known_hosts"
 
 echo "do that thing here"
+echo "INPUT_DOCKER_PRUNE = $INPUT_DOCKER_PRUNE"
+echo "INPUT_REMOTE_DOCKER_HOST = $INPUT_REMOTE_DOCKER_HOST"
 if ! [ -z "$INPUT_DOCKER_PRUNE" ] && [ $INPUT_DOCKER_PRUNE = 'true' ] ; then
+  echo "Run command: yes | docker --log-level debug --host ssh://$INPUT_REMOTE_DOCKER_HOST system prune -a 2>&1"
   yes | docker --log-level debug --host "ssh://$INPUT_REMOTE_DOCKER_HOST" system prune -a 2>&1
 fi
 
